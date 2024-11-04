@@ -1,77 +1,24 @@
-// Imports
-const { ethers, run, network } = require("hardhat");
+// Import Hardhat's ethers module
+const { ethers } = require("hardhat");
 
-// Custom delay function
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// Async main function
 async function main() {
-  const SimpleStorageFactory = await ethers.getContractFactory("SimpleStorage");
+  // Get the contract factory
+  const MarketFactory = await ethers.getContractFactory("market");
   console.log("Deploying contract...");
-  const simpleStorage = await SimpleStorageFactory.deploy();
 
-  // Await deployment completion
-  await simpleStorage.waitForDeployment();
-  console.log(`Deployed contract to: ${simpleStorage.target}`);
+  // Deploy the contract
+  const marketContract = await MarketFactory.deploy();
 
-  // Verify on Etherscan if on Sepolia network
-  // if (network.config.chainId === 11155111 && process.env.ETHERSCAN_API_KEY) {
-  console.log("Waiting for block confirmations...");
-  const txHash = simpleStorage.deploymentTransaction().hash;
-  await waitForConfirmations(txHash, 6); // Wait for 6 confirmations
+  // Wait for the contract to be deployed
+  await marketContract.waitForDeployment();
 
-  await verify(simpleStorage.target, []);
-  //}
-
-  // Interact with the deployed contract
-  const currentValue = await simpleStorage.retrieve();
-  console.log(`Current Value is: ${currentValue}`);
-
-  const transactionResponse = await simpleStorage.store(7);
-  await transactionResponse.wait(1);
-  const updatedValue = await simpleStorage.retrieve();
-  console.log(`Updated Value is: ${updatedValue}`);
+  console.log(`Contract deployed at address: ${marketContract.target}`);
 }
 
-// Function to wait for block confirmations
-async function waitForConfirmations(txHash, confirmations) {
-  let receipt;
-  let currentConfirmations = 0;
-
-  while (currentConfirmations < confirmations) {
-    receipt = await ethers.provider.getTransactionReceipt(txHash);
-    if (receipt && receipt.confirmations) {
-      currentConfirmations = receipt.confirmations;
-    }
-    if (currentConfirmations < confirmations) {
-      await delay(3000); // Wait 3 seconds before checking again
-    }
-  }
-}
-
-// Verification function
-async function verify(contractAddress, args) {
-  console.log("Verifying contract...");
-  try {
-    await run("verify:verify", {
-      address: contractAddress,
-      constructorArguments: args,
-    });
-  } catch (e) {
-    if (e.message.toLowerCase().includes("already verified")) {
-      console.log("Already Verified!");
-    } else {
-      console.log(e);
-    }
-  }
-}
-
-// Execute main function
+// Run the main function
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error(error);
+    console.error("Error deploying contract:", error);
     process.exit(1);
   });
