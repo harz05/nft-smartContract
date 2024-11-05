@@ -1,4 +1,4 @@
-# Sample Hardhat Project
+# nft marketplace 
 
 This project has the smart contract code for NFT marketplace and has all the required functions ready to be integrated.
 
